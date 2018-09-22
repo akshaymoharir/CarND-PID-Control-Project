@@ -4,8 +4,11 @@
 #include "PID.h"
 #include <math.h>
 
+
+
 // for convenience
 using json = nlohmann::json;
+
 
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
@@ -30,12 +33,29 @@ std::string hasData(std::string s) {
 
 int main()
 {
+  
   uWS::Hub h;
+  
 
-  PID pid;
-  // TODO: Initialize the pid variable.
+  PID pid_steer, pid_throttle;
+  // TODO: Initialize the pid_steer variable.
+  double init_Kp_steer = -0.13;   // best manual tuned to: -0.15;
+  double init_Ki_steer = -0.0002;   // best manual tuned to: -0.00003;
+  double init_Kd_steer = -3.5;   // best manual tuned to: -2.5;
+  
+  double init_Kp_throttle = 0.87;
+  double init_Ki_throttle = 0.00000;
+  double init_Kd_throttle = 1.5;
+  
+  // debugging
+  long long loop_count = 1;
+  
+  pid_steer.Init(init_Kp_steer, init_Ki_steer, init_Kd_steer);
+  
+  pid_throttle.Init(init_Kp_throttle, init_Ki_throttle, init_Kd_throttle);
+  
 
-  h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&pid_steer, &pid_throttle, &loop_count](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -51,6 +71,8 @@ int main()
           double speed = std::stod(j[1]["speed"].get<std::string>());
           double angle = std::stod(j[1]["steering_angle"].get<std::string>());
           double steer_value;
+          double throttle_value;
+          
           /*
           * TODO: Calcuate steering value here, remember the steering value is
           * [-1, 1].
@@ -58,12 +80,48 @@ int main()
           * another PID controller to control the speed!
           */
           
+          //double dKp = 0.005;
+          //double dKi = 0.001;
+          //double dKd = 0.3;
+          //double tol = 0.5;
+          
+          //pid.Twiddle(tol, dKp, dKi, dKd, cte);
+          
+          loop_count++; // to keep track of loop, might be helpful for logging purposes
+          
+          // Use PID to compute steering wheel angle
+          pid_steer.UpdateError(cte);
+          steer_value = pid_steer.TotalError();
+          
+          double throttle = 0.8 - abs(steer_value);
+          std::cout << "Throttle ideal: " << throttle << std::endl;
+          
+          // Use PID to compute throttle
+          pid_throttle.UpdateError(throttle);
+          throttle_value = pid_throttle.TotalError();
+          
           // DEBUG
-          std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
-
+          std::cout << "Throttle controlled: " << throttle_value << std::endl;
+          
+          if(loop_count<10) // Initially, just to start car strictly in forward direction
+          {
+            throttle_value = 0.3;
+          }
+          // Control throttle within threholds to avoid over acceleration in forward and reverse direction
+          if(throttle_value > 0.6)
+          {
+            throttle_value = 0.6;
+          }
+          else if(throttle_value < -0.3)
+          {
+            throttle_value = -0.2;
+          }
+          
+          
           json msgJson;
           msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.3;
+          msgJson["throttle"] = throttle_value; //udacity provided value: 0.3
+          msgJson["speed"] = speed;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
@@ -73,21 +131,6 @@ int main()
         std::string msg = "42[\"manual\",{}]";
         ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
       }
-    }
-  });
-
-  // We don't need this since we're not using HTTP but if it's removed the program
-  // doesn't compile :-(
-  h.onHttpRequest([](uWS::HttpResponse *res, uWS::HttpRequest req, char *data, size_t, size_t) {
-    const std::string s = "<h1>Hello world!</h1>";
-    if (req.getUrl().valueLength == 1)
-    {
-      res->end(s.data(), s.length());
-    }
-    else
-    {
-      // i guess this should be done more gracefully?
-      res->end(nullptr, 0);
     }
   });
 

@@ -1,5 +1,34 @@
-# CarND-Controls-PID
+# CarND-Controls-PID Project Report
 Self-Driving Car Engineer Nanodegree Program
+
+## Overview
+
+Purpose of the project is understand controller mechanism and its tuning methods. 
+Objective of the project is to design controller that controls car using accel, brakes and steering, given input of cross track error(difference between current position of a car and its ideal trajectory).
+I am using a PID controller to control steering angle and another PID controller to control speed of the car. I am using manual tuning for hyperparameter tuning for both of PID controllers.
+
+
+### Description of the effect each of the P, I, D components had in your implementation
+Input given in simulation environment is cross-track error. Using this error, I am computing what shall be steering angle input. 
+Proportional parameter causes to compute steering angle directly proportional to cross track error. This parameter helps to calculate ideal steering angle but it is never going to be perfect, since error is never going to be precisely 0. This parameter is the cause of overshoot and causes system to overshoot-undershoot around target value.
+As the cross track error changes with respect to environment on differnt turns, overshoot and undershoot starts resonating causing raise in cross track error.
+
+Differential parameter compensates resonance caused by proportional factor and increases stability of car to reach to target value.
+
+Integral parameter compensates bias in cross track error and helps to reach target precisely. PD controller might end up with small deviation in actual value and target value, and this difference is accumulated by integral term. As accumulation increases, this factor becomes significant and corrects control input so as to reach to the target value precisely.
+
+
+### Description of final hyperparameters
+Hyperparameters are tuned manually. I started with the simplest system Kp=-1, Ki=0, Kd=0, basically without any appropriate control. This set controls car well for very small cross track error. When cross track error starts increasing on any simple turns, proportional factor being set to 1, car starts driving towards edges rapidly stating clearly proportional control param is too high. Tuning this param to Kp=-0.2 the car starts resonating with rapid changes in steering angle and starts oscillating around the center of the track.
+
+To compensate these oscillations, I used differential term, Kp=-0.2, Kd=-1. This set offers descent stability to follow the straight track, however, at turns, the car gets unstable, with considerable oscillations, stating that differental term is not tuned very well and can further be increased. By updating parameters to Kp=-0.2, Kd=-2.5, the car drives well, still the car shows sudden changes in steering angle at sharp turns indicating that proportional factor is contributing a little more than required. Tuning this parameter to Kp=0.75, Kd=2.5, car drives almost perfectly on the track. With little more efforts and trying tuning parameters, here are my tuned parameters: Kp=-0.15, Kd=-2.5.
+
+Integral term was not required until this moment, however, when added, the car starts turning precisly more responsive at turns. After considering effect of integral term, parameters are tuned to drive a little bit agressively. Parameters are tuned at Kp=-0.13, Kd=-3.5, Ki=-0.002.
+
+I also added a controller to control the speed of the car so that it can accelerate to high speeds up to 60 on straight track and can decelerate on sharp turns, still maintaining speed upto 30-33. The PID controller for speed uses steering angle as input parameter to calculate the speed, as the steering angle increases, which is case of turn, the speed shall decrease.
+Speed controller parameters are also tuned to drive a little aggressively.
+
+
 
 ---
 
@@ -35,65 +64,3 @@ There's an experimental patch for windows in this [PR](https://github.com/udacit
 3. Compile: `cmake .. && make`
 4. Run it: `./pid`. 
 
-Tips for setting up your environment can be found [here](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/f758c44c-5e40-4e01-93b5-1a82aa4e044f/concepts/23d376c7-0195-4276-bdf0-e02f1f3c665d)
-
-## Editor Settings
-
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
-
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
-
-## Code Style
-
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
-
-## Project Instructions and Rubric
-
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
-
-More information is only accessible by people who are already enrolled in Term 2
-of CarND. If you are enrolled, see [the project page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/f1820894-8322-4bb3-81aa-b26b3c6dcbaf/lessons/e8235395-22dd-4b87-88e0-d108c5e5bbf4/concepts/6a4d8d42-6a04-4aa6-b284-1697c0fd6562)
-for instructions and the project rubric.
-
-## Hints!
-
-* You don't have to follow this directory structure, but if you do, your work
-  will span all of the .cpp files here. Keep an eye out for TODOs.
-
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to we ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
-
-This is test commit for the project

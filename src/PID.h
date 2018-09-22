@@ -1,6 +1,7 @@
 #ifndef PID_H
 #define PID_H
 
+
 class PID {
 public:
   /*
@@ -16,6 +17,10 @@ public:
   double Kp;
   double Ki;
   double Kd;
+  
+  //double dKp;
+  //double dKi;
+  //double dKd;
 
   /*
   * Constructor
@@ -41,6 +46,12 @@ public:
   * Calculate the total PID error.
   */
   double TotalError();
+  
+  /*
+   * Compute optimum P,I,D gains(adaptive).
+   */
+  //void Twiddle(double tol, double dKp, double dKi, double dKd, double cte);
+
 };
 
 #endif /* PID_H */
