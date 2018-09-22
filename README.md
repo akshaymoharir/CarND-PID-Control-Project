@@ -28,6 +28,7 @@ Integral term was not required until this moment, however, when added, the car s
 I also added a controller to control the speed of the car so that it can accelerate to high speeds up to 60 on straight track and can decelerate on sharp turns, still maintaining speed upto 30-33. The PID controller for speed uses steering angle as input parameter to calculate the speed, as the steering angle increases, which is case of turn, the speed shall decrease.
 Speed controller parameters are also tuned to drive a little aggressively.
 
+[Watch YouTube video](https://youtu.be/ow9HzETLxn8)
 
 
 ---
